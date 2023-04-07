@@ -5,7 +5,7 @@ def recurse(n)
 	object = Object.new
 	
 	if n == 0
-		Fiber.yield while true
+		Fiber.yield
 	else
 		recurse(n - 1)
 	end
@@ -29,10 +29,24 @@ def benchmark
 		
 		# The second time we do this, we would imagine that the fiber state has not changed, in theory it should not require any stack scanning:
 		GC.start(full_mark: false, immediate_sweep: true)
+		
+		# fibers.each do |fiber|
+		# 	fiber.resume
+		# end
+		
+		# fibers = nil
+		
+		# # The third time we do this, we expect all fibers to be dead, and we should not scan them:
+		# GC.start(full_mark: true, immediate_sweep: true)
+		
+		# # The forth time we do this, there should be no state remaining and it should be O(1) time:
+		# GC.start(full_mark: true, immediate_sweep: true)
 	end
 end
 
 GC.disable
+GC.start
+
 GC::Profiler.enable
 
 benchmark

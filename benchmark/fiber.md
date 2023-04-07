@@ -26,15 +26,15 @@ Count = 8192
 Count = 16384
 GC 35 invokes.
 Index    Invoke Time(sec)       Use Size(byte)     Total Size(byte)         Total Object                    GC Time(ms)
-    1               0.022               766320              2096640                52416         0.70819400000000221063
-    2               0.023               764160              2096640                52416         0.53977300000000028035
-    3               0.024               804440              2096640                52416         0.55591300000000165582
-    4               0.024               804400              2096640                52416         0.53746300000000191144
-    5               0.025               884760              2096640                52416         0.58041300000000184411
-    6               0.026               884760              2096640                52416         0.56753299999999851089
-    7               0.027              1045400              2227680                55692         0.68527399999999960567
-    8               0.027              1045400              2227680                55692         0.68218299999999942873
-    9               0.029              1366680              2686320                67158         0.89450500000000032763
+	1               0.022               766320              2096640                52416         0.70819400000000221063
+	2               0.023               764160              2096640                52416         0.53977300000000028035
+	3               0.024               804440              2096640                52416         0.55591300000000165582
+	4               0.024               804400              2096640                52416         0.53746300000000191144
+	5               0.025               884760              2096640                52416         0.58041300000000184411
+	6               0.026               884760              2096640                52416         0.56753299999999851089
+	7               0.027              1045400              2227680                55692         0.68527399999999960567
+	8               0.027              1045400              2227680                55692         0.68218299999999942873
+	9               0.029              1366680              2686320                67158         0.89450500000000032763
    10               0.030              1366680              2686320                67158         0.83200399999999730127
    11               0.033              2009240              3669120                91728         1.31506699999999621120
    12               0.034              2009240              3669120                91728         1.19577600000000261460
@@ -80,3 +80,25 @@ Stacks which are "touched" between garbage collection could be tracked in a list
 ### Stack Pinning
 
 Stacks which have objects allocated on them should pin those objects, e.g. in the old generation of the garbage collector. This would prevent the objects from being collected, even if the stacks were not scanned. In the best case, this reduces the overhead of scanning live but inactive stacks to zero, but in the worst case could stress the generational garbage collector as when stacks ARE modified, it would force extra book-keeping for the old generation.
+
+### Unreachable Fibers
+
+I experimented with the code, assuming we could easily clean up the existing fibers:
+
+```ruby
+# (1) This will cause the fibers to exit:
+fibers.each do |fiber|
+	fiber.resume
+end
+
+# This will cause the fibers to be unreachable:
+fibers = nil
+
+# The third time we do this, we expect all fibers to be dead, and we should not scan them:
+GC.start(full_mark: true, immediate_sweep: true)
+
+# The forth time we do this, there should be no state remaining and it should be O(1) time:
+GC.start(full_mark: true, immediate_sweep: true)
+```
+
+However, without (1), I found that (2) was not sufficient to cause the fibers to be cleaned up. This seems like an oversight in the current implementation of fibers, but I'm not sure if it's intentional or not.
