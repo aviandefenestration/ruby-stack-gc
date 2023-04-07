@@ -57,3 +57,26 @@ Index    Invoke Time(sec)       Use Size(byte)     Total Size(byte)         Tota
    29               3.193            658705560            989089920             24727248       469.21873300000038398139
    30               3.662            658705560            989089920             24727248       414.34203800000000228465
 ```
+
+## Discussion
+
+The benchmark runs 15 times, each time doubling the number of fibers. Each fiber recursively allocates a single object on the stack, 1000 times by default. The benchmark then runs the garbage collector twice. The first time, in theory, needs to do a full scan of the fiber stacks. However, since the fibers are not resumed or modified in any way, a full scan should not be necessary when invoking the garbage collector a second time.
+
+The results include two rows for each iteration of the benchmark. Ideally, the 2nd row is significantly less than the first. Let's consider the last iteration of the benchmark, in which 16k fibers were allocated.
+
+```
+   29               3.193            658705560            989089920             24727248       469.21873300000038398139
+   30               3.662            658705560            989089920             24727248       414.34203800000000228465
+```
+
+We can see that the time spent in the garbage collector is reduced, but still proportional to the number of fibers. Ideally, the 2nd run of the garbage collector can identify that the fibers' stacks have not been modified and do not need to be scanned again, thus the expectation is the 2nd run should be closer to O(1) in time, rather than proportional to the number of fibers.
+
+## Ideas
+
+### Modified List
+
+Stacks which are "touched" between garbage collection could be tracked in a list. During garbage collection, only that list of fibers/threads should be scanned. In the best case, this reduces the overhead to zero, but in the worst case is still proportional to the number of stacks.
+
+### Stack Pinning
+
+Stacks which have objects allocated on them should pin those objects, e.g. in the old generation of the garbage collector. This would prevent the objects from being collected, even if the stacks were not scanned. In the best case, this reduces the overhead of scanning live but inactive stacks to zero, but in the worst case could stress the generational garbage collector as when stacks ARE modified, it would force extra book-keeping for the old generation.

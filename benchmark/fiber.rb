@@ -25,10 +25,10 @@ def benchmark
 		fibers = make_fibers(count)
 		
 		# The first time we do this, we expect all fibers to be fresh, and we should scan them:
-		GC.start
+		GC.start(full_mark: true, immediate_sweep: true)
 		
 		# The second time we do this, we would imagine that the fiber state has not changed, in theory it should not require any stack scanning:
-		GC.start
+		GC.start(full_mark: false, immediate_sweep: true)
 	end
 end
 
