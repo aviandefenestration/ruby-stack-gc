@@ -27,20 +27,21 @@ def benchmark
 		# The first time we do this, we expect all fibers to be fresh, and we should scan them:
 		GC.start(full_mark: true, immediate_sweep: true)
 		
-		puts "Debug counters: "RubyVM.stat.slice(:fiber_full_stack_scan, :thread_full_stack_scan, :stack_scan_bytes)
-		puts "GC stat: "GC.stat.slice(:count, :heap_marked_slots, :minor_gc_count, :major_gc_count)
+		puts ("Debug counters: " + RubyVM.stat.slice(:fiber_full_stack_scan, :thread_full_stack_scan, :stack_scan_bytes).to_s)
+		puts ("GC stat: " + GC.stat.slice(:count, :heap_marked_slots, :minor_gc_count, :major_gc_count).to_s)
 
 		#puts GC.latest_gc_info
 		# The second time we do this, we would imagine that the fiber state has not changed, in theory it should not require any stack scanning:
 		GC.start(full_mark: false, immediate_sweep: true)
 		
-		puts "Debug counters: "RubyVM.stat.slice(:fiber_full_stack_scan, :thread_full_stack_scan, :stack_scan_bytes)
-		puts "GC stat: "GC.stat.slice(:count, :heap_marked_slots, :minor_gc_count, :major_gc_count)
-		# fibers.each do |fiber|
-		# 	fiber.resume
-		# end
+		puts ("Debug counters: " + RubyVM.stat.slice(:fiber_full_stack_scan, :thread_full_stack_scan, :stack_scan_bytes).to_s)
+		puts ("GC stat: " + GC.stat.slice(:count, :heap_marked_slots, :minor_gc_count, :major_gc_count).to_s)
 		
-		# fibers = nil
+		fibers.each do |fiber|
+			fiber.resume
+		end
+		
+		fibers = nil
 		
 		# # The third time we do this, we expect all fibers to be dead, and we should not scan them:
 		# GC.start(full_mark: true, immediate_sweep: true)
