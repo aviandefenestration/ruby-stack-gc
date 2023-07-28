@@ -45,47 +45,28 @@ def benchmark
 		stack_scan_bytes.push(RubyVM.stat.slice(:stack_scan_bytes).to_a)
 		stack_barrier_met.push(RubyVM.stat.slice(:stack_barrier_met).to_a)
 
-		#puts "collected counter data"
-
-		#puts ("Debug counters: " + RubyVM.stat.slice(:fiber_full_stack_scan, :thread_full_stack_scan, :stack_scan_bytes).to_s)
-		#puts ("GC stat: " + GC.stat.slice(:count, :heap_marked_slots, :minor_gc_count, :major_gc_count).to_s)
-
-		#puts GC.latest_gc_info
 		# The second time we do this, we would imagine that the fiber state has not changed, in theory it should not require any stack scanning:
 		GC.start(full_mark: false, immediate_sweep: true)
-
-		#puts "did minor gc"
 		
 		fiber_full_stack_scan.push(RubyVM.stat.slice(:fiber_full_stack_scan).to_a)
 		thread_full_stack_scan.push(RubyVM.stat.slice(:thread_full_stack_scan).to_a)
 		stack_scan_bytes.push(RubyVM.stat.slice(:stack_scan_bytes).to_a)
 		stack_barrier_met.push(RubyVM.stat.slice(:stack_barrier_met).to_a)
 
-		#puts "collected more counter data"
-
 		GC.start(full_mark: false, immediate_sweep: true)
-
-		#puts "did another major gc"
 
 		fiber_full_stack_scan.push(RubyVM.stat.slice(:fiber_full_stack_scan).to_a)
 		thread_full_stack_scan.push(RubyVM.stat.slice(:thread_full_stack_scan).to_a)
 		stack_scan_bytes.push(RubyVM.stat.slice(:stack_scan_bytes).to_a)
 		stack_barrier_met.push(RubyVM.stat.slice(:stack_barrier_met).to_a)
 
-		#puts "collected even more counter data"
-
 		GC.start(full_mark: false, immediate_sweep: true)
-
-		#puts "did another major gc"
 
 		fiber_full_stack_scan.push(RubyVM.stat.slice(:fiber_full_stack_scan).to_a)
 		thread_full_stack_scan.push(RubyVM.stat.slice(:thread_full_stack_scan).to_a)
 		stack_scan_bytes.push(RubyVM.stat.slice(:stack_scan_bytes).to_a)
 		stack_barrier_met.push(RubyVM.stat.slice(:stack_barrier_met).to_a)
-
-		#puts ("Debug counters: " + RubyVM.stat.slice(:fiber_full_stack_scan, :thread_full_stack_scan, :stack_scan_bytes).to_s)
-		#puts ("GC stat: " + GC.stat.slice(:count, :heap_marked_slots, :minor_gc_count, :major_gc_count).to_s)
-		
+	
 		fibers.each do |fiber|
 			fiber.resume
 			#puts "resumed fiber"
